@@ -2,6 +2,11 @@ var ui = SpreadsheetApp.getUi();
 var addressColumn = 1;
 var outputColumn = 2;
 
+function testLookup(){
+  let fips = lookupFips("4600 Silver Hill Rd, Washington, DC 20233");
+  console.log(fips);
+}
+
 function processAddress(){
   var sheet = SpreadsheetApp.getActiveSheet();
   var cells = sheet.getActiveRange();
@@ -9,7 +14,7 @@ function processAddress(){
   if (cells.getNumColumns() != 2) {
     ui.alert(
       'Warning',
-      'You must select 2 columns: Address, Obscured Address',
+      'You must select 2 columns: Address, FIPS Code',
       ui.ButtonSet.OK
     );
     return;
@@ -20,34 +25,32 @@ function processAddress(){
     
     if (!address) {continue}
     
-    obscureAddress(cells, addressRow, address);
+    let fips_code = lookupFips(address);
+    populateResponse(cells, addressRow, fips_code);
   }
 }
 
-function obscureAddress(cells, row, address){
-  // pluck first set of digits at the beginning of the address string
-  var myregexp = /^\d+/g;
-  var match = myregexp.exec(address);
-  
-  if (!match) {
-    insertDataIntoSheet(cells, row, [
-      [outputColumn, address]
-    ]);
-  }
-  else {
-  
-    var street_num = match[0];
-  
-    // replaces last 2 digits with zeroes
-    var street_num_obscured = street_num.slice(0, -2) + "00";
-  
-    // return obscured address
-    var obscured_address = address.replace(street_num, street_num_obscured);
-  
-    insertDataIntoSheet(cells, row, [
-      [outputColumn, obscured_address]
-    ]);
-  }
+function lookupFips(address){
+  const url = "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?benchmark=4&format=json&vintage=4" +
+              "&address=" + encodeURIComponent(address)
+
+    const response = UrlFetchApp.fetch(url, {'muteHttpExceptions': true});
+    const responseCode = response.getResponseCode()
+
+    if (responseCode == 200) {
+      let data = JSON.parse(response.getContentText())
+      console.log(data['result']['addressMatches'][0]['geographies']['2020 Census Blocks'][0]['GEOID'])
+      let fips_code = data['result']['addressMatches'][0]['geographies']['2020 Census Blocks'][0]['GEOID']
+      return fips_code;
+    } else {
+      throw `Error ${responseCode}`
+    }
+}
+
+function populateResponse(cells, row, value){
+  insertDataIntoSheet(cells, row, [
+        [outputColumn, value]
+      ]);
 }
   
 /**

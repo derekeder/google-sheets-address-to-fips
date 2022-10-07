@@ -12,7 +12,7 @@ FPIS codes are geographic identifiers for US Census blocks, block groups, tracts
 
 ## Adding this script to your own Google Sheet
 
-1. In your Google Sheet, click on Tools => Script editor
+1. In your Google Sheet, click on Extensions => Apps Script
 2. Click Close on the pop-up tutorial window, and delete the starter text.
 3. Copy the entire code in [fips-lookup-google-sheets.gs](https://github.com/derekeder/google-sheets-address-to-fips/blob/main/fips_lookup_gsheets.gs) and paste it in.
 4. Save it and give it a name like 'Census FIPS Lookup'
